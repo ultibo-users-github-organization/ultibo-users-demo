@@ -1,0 +1,2 @@
+kernel=ultibo-users-demo-kernel7.img
+cmdline=ultibo-users-demo-cmdline.txt
