@@ -10,5 +10,5 @@ then
     popd
 else
     export PATH=$HOME/ultibo/core:$PATH
-    lazbuild $LPI
+    lazbuild -B $LPI
 fi
