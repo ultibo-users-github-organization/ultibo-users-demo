@@ -6,9 +6,10 @@ uses
  FATFS,FileSystem,MMC,
  Ultibo,
  SysUtils,
- FunctionDiagnosticsConsole,
  FunctionCecDemo,
- uFunction;
+ FunctionDiagnosticsConsole,
+ FunctionSimpleAudio,
+ uUsersDemo;
 
 procedure RestoreDefaultBootConfig;
 begin
@@ -23,7 +24,6 @@ begin
  StartLogging;
  while True do
   begin
-   FunctionDiagnosticsConsole.Main;
-   FunctionCecDemo.Main;
+   Functions[FunctionNumber].Main;
   end;
 end.

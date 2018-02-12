@@ -16,7 +16,8 @@ uses
  Ultibo,
  Logging,
  Console,
- uFunction;
+ uUsersDemo,
+ VC4CEC;
 
 type
   TEDID = packed record
@@ -84,12 +85,19 @@ end;
 procedure Main;
 var
  I:Integer;
+ CecEvent:TInputEvent;
+ KeyPressed:Boolean;
+ Key:Char;
 begin
- FunctionEntry;
+ MainWindow:=ConsoleWindowCreate(ConsoleDeviceGetDefault,CONSOLE_POSITION_LEFT,True);
+ ConsoleWindowSetDefault(ConsoleDeviceGetDefault,MainWindow);
+ FunctionIsActive:=True;
+
  Show('Diagnostics Console');
  Show('-------------------');
  Show('r key, blue (d) remote controller button - restart system');
- Show('q key, channel up remote controller button - quit current function');
+ Show('j key, channel up remote controller button - leave current function and move to next');
+ Show('k key, channel down remote controller button - leave current function and move to previous');
  Show('');
  for I:=0 to Length(Functions) - 1 do
   Show(Format('Function %s is available',[Functions[I].Name]));
@@ -100,10 +108,40 @@ begin
   [PNPID (EDID.ManufacturerID, 10) + PNPID (EDID.ManufacturerID, 5) + PNPID (EDID.ManufacturerID, 0),
    EDID.ProductID, (EDID.ManufactureYear + 1990).ToString,
    EDID.Version.ToString, EDID.Revision.ToString]));
- WaitForFunctionQuitRequested;
- FunctionExit;
+
+ while FunctionIsActive do
+  begin
+   Key:=Char(0);
+   CecEvent:=ReadEvent(@CecEventQueue);
+   case CecEvent.Kind of
+    KindInputEventCecButtonPressed:
+     case CecEvent.ButtonPressed of
+      CEC_User_Control_ChannelUp:
+       Key:='j';
+      CEC_User_Control_ChannelDown:
+       Key:='k';
+     end;
+   end;
+   if Key = Char(0) then
+    begin
+     KeyPressed:=ConsolePeekKey(Key,Nil);
+     if KeyPressed then
+      ConsoleGetKey(Key,Nil);
+    end;
+   case Key of
+    'j':
+     UpdateFunctionNumber(+1);
+    'k':
+     UpdateFunctionNumber(-1);
+    'r':
+     SystemRestart(0);
+   end;
+   Sleep(10);
+  end;
+
+ ConsoleWindowDestroy(MainWindow);
 end;
 
 initialization
- RegisterFunction('Diagnostics Console');
+ RegisterFunction('Diagnostics Console',@Main);
 end.

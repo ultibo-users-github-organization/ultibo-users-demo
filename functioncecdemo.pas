@@ -18,7 +18,7 @@ uses
  Console,
  VC4CEC,
  VC4,
- uFunction;
+ uUsersDemo;
 
 function Swap(const A:cardinal): cardinal; inline;
 begin
@@ -84,6 +84,8 @@ var
  OpCode:Byte;
  UserControl:Byte;
  NewlyRoutedPhysicalAddress:Word;
+ CecEvent:TInputEvent;
+ Elapsed:Integer;
 begin
  ClockNow:=ClockGetCount;
  Reason:=Reason and $ffff;
@@ -112,20 +114,20 @@ begin
   end
  else if Reason = VC_CEC_BUTTON_PRESSED then
   begin
+   CecEvent.Kind:=KindInputEventCecButtonPressed;
+   CecEvent.ButtonPressed:=UserControl;
+   AddEvent(@CecEventQueue,CecEvent);
    CecButtonPressedClock:=ClockNow;
    Log(Format('CEC: %s pressed',[UserControlToString(UserControl)]));
   end
  else if Reason = VC_CEC_BUTTON_RELEASE then
   begin
-   Log(Format('CEC: %s released after %d milliseconds',[UserControlToString(UserControl),(ClockNow - CecButtonPressedClock) div 1000]));
-   if UserControl = CEC_User_Control_ChannelUp then
-    begin
-     CecQuitRequested:=True;
-    end
-   else if UserControl = CEC_User_Control_F1Blue then
-    begin
-     CecRestartRequested:=True;
-    end;
+   Elapsed:=(ClockNow - CecButtonPressedClock) div 1000;
+   Log(Format('CEC: %s released after %d milliseconds',[UserControlToString(UserControl),Elapsed]));
+   CecEvent.Kind:=KindInputEventCecButtonReleased;
+   CecEvent.ButtonReleased:=UserControl;
+   CecEvent.ElapsedMilliseconds:=Elapsed;
+   AddEvent(@CecEventQueue,CecEvent);
   end
  else
   begin
@@ -138,14 +140,33 @@ begin
  ConsoleWriteLn(Text);
 end;
 
-procedure Main;
+procedure InitializeHdmiCec;
 begin
- FunctionEntry;
+ BCMHostInit;
+ vc_cec_set_passive(True);
+ vc_cec_register_callback(@CECCallback,Nil);
+ vc_cec_register_all;
+ vc_cec_get_physical_address(MyPhysicalAddress);
+ vc_cec_set_osd_name('Ultibo!');
+ BeginThread(@HdmiInputWatchingThread,nil,HdmiInputWatchingThreadHandle,THREAD_STACK_DEFAULT_SIZE)
+end;
+
+procedure Main;
+var
+ CecEvent:TInputEvent;
+ KeyPressed:Boolean;
+ Key:Char;
+begin
+ MainWindow:=ConsoleWindowCreate(ConsoleDeviceGetDefault,CONSOLE_POSITION_LEFT,True);
+ ConsoleWindowSetDefault(ConsoleDeviceGetDefault,MainWindow);
+ FunctionIsActive:=True;
+
  vc_cec_set_osd_name('Ultibo!');
  Show('CecDemo');
  Show('-------');
  Show('r key, blue (d) remote controller button - restart system');
- Show('q key, channel up remote controller button - quit current function');
+ Show('j key, channel up remote controller button - leave current function and move to next');
+ Show('k key, channel down remote controller button - leave current function and move to previous');
  Show('');
  Show('Each time this function starts, an attempt is made to set the tv source name to "Ultibo!"');
  Show('  Try changing inputs with the tv remote controller to see if this is displayed');
@@ -154,17 +175,41 @@ begin
  Show('  a message "Ultibo Here!" will be momentarily displayed on the tv using the OSD (On Screen Display)');
  Show('');
  Show(Format('Physical Address 0x%4.4x',[MyPhysicalAddress]));
- WaitForFunctionQuitRequested;
- FunctionExit;
+
+ while FunctionIsActive do
+  begin
+   Key:=Char(0);
+   CecEvent:=ReadEvent(@CecEventQueue);
+   case CecEvent.Kind of
+    KindInputEventCecButtonPressed:
+     case CecEvent.ButtonPressed of
+      CEC_User_Control_ChannelUp:
+       Key:='j';
+      CEC_User_Control_ChannelDown:
+       Key:='k';
+     end;
+   end;
+   if Key = Char(0) then
+    begin
+     KeyPressed:=ConsolePeekKey(Key,Nil);
+     if KeyPressed then
+      ConsoleGetKey(Key,Nil);
+    end;
+   case Key of
+    'j':
+     UpdateFunctionNumber(+1);
+    'k':
+     UpdateFunctionNumber(-1);
+    'r':
+     SystemRestart(0);
+   end;
+   Sleep(10);
+  end;
+
+ ConsoleWindowDestroy(MainWindow);
 end;
 
 initialization
- RegisterFunction('CecDemo');
- BCMHostInit;
- vc_cec_set_passive(True);
- vc_cec_register_callback(@CECCallback,Nil);
- vc_cec_register_all;
- vc_cec_get_physical_address(MyPhysicalAddress);
- vc_cec_set_osd_name('Ultibo!');
- BeginThread(@HdmiInputWatchingThread,nil,HdmiInputWatchingThreadHandle,THREAD_STACK_DEFAULT_SIZE)
+ RegisterFunction('CecDemo',@Main);
+ InitializeHdmiCec;
 end.

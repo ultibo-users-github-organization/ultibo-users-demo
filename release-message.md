@@ -7,6 +7,7 @@
 # Optional:
 * usb keyboard
 * remote controller for tv
+* headphones or speakers
 
 # Steps:
 * Using the computer
@@ -14,13 +15,14 @@
         * this destroys the current contents of the sd card
     * download the zip file
     * unzip it to the sd card
+* insert the SD card into the pi
 * connect the pi to the tv using the hdmi cable
 * connect the optional usb keyboard to the pi
 * turn on the tv
-* insert the SD card into the pi
 * apply power to the pi
 * you should see a green border with large white regions with black text
 
 # Operation:
-* q key quits a function and moves to the next
+* j key quits a function and moves to the next
+* k key quits a function and moves to the previous
 * r key reboots
