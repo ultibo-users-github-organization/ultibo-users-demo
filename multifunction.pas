@@ -1,4 +1,4 @@
-unit uUsersDemo;
+unit Multifunction;
 {$mode delphi}{$H+}
 
 interface
@@ -47,7 +47,6 @@ var
  FunctionNumber:Integer;
  Functions:Array of TFunction;
  CecEventQueue:TEventQueue;
- MainWindow:TWindowHandle;
  FunctionIsActive:Boolean;
 
 implementation

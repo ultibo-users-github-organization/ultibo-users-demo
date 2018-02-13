@@ -14,7 +14,7 @@ uses
   Threads,
   SysUtils,
   Classes,
-  Ultibo,fatfs,framebuffer,console,simpleaudio,uUsersDemo,VC4CEC
+  Ultibo,framebuffer,console,simpleaudio,Multifunction,VC4CEC
   { Add additional units here };
 
 var freq2,pan2:double;           // These have to be global
@@ -100,6 +100,8 @@ begin
        Key:='j';
       CEC_User_Control_ChannelDown:
        Key:='k';
+      CEC_User_Control_F1Blue:
+       Key:='r';
       CEC_User_Control_Pause:
        Key:=' ';
      end;

@@ -18,7 +18,7 @@ uses
  Console,
  VC4CEC,
  VC4,
- uUsersDemo;
+ Multifunction;
 
 function Swap(const A:cardinal): cardinal; inline;
 begin
@@ -156,6 +156,7 @@ var
  CecEvent:TInputEvent;
  KeyPressed:Boolean;
  Key:Char;
+ MainWindow:TWindowHandle;
 begin
  MainWindow:=ConsoleWindowCreate(ConsoleDeviceGetDefault,CONSOLE_POSITION_LEFT,True);
  ConsoleWindowSetDefault(ConsoleDeviceGetDefault,MainWindow);
@@ -187,6 +188,8 @@ begin
        Key:='j';
       CEC_User_Control_ChannelDown:
        Key:='k';
+      CEC_User_Control_F1Blue:
+       Key:='r';
      end;
    end;
    if Key = Char(0) then
@@ -210,6 +213,6 @@ begin
 end;
 
 initialization
- RegisterFunction('CecDemo',@Main);
+ RegisterFunction('HDMI CEC Demo',@Main);
  InitializeHdmiCec;
 end.

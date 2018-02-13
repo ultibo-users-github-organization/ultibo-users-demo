@@ -16,7 +16,7 @@ uses
  Ultibo,
  Logging,
  Console,
- uUsersDemo,
+ Multifunction,
  VC4CEC;
 
 type
@@ -88,6 +88,7 @@ var
  CecEvent:TInputEvent;
  KeyPressed:Boolean;
  Key:Char;
+ MainWindow:TWindowHandle;
 begin
  MainWindow:=ConsoleWindowCreate(ConsoleDeviceGetDefault,CONSOLE_POSITION_LEFT,True);
  ConsoleWindowSetDefault(ConsoleDeviceGetDefault,MainWindow);
@@ -120,13 +121,18 @@ begin
        Key:='j';
       CEC_User_Control_ChannelDown:
        Key:='k';
+      CEC_User_Control_F1Blue:
+       Key:='r';
      end;
    end;
    if Key = Char(0) then
     begin
      KeyPressed:=ConsolePeekKey(Key,Nil);
      if KeyPressed then
-      ConsoleGetKey(Key,Nil);
+      begin
+       ConsoleGetKey(Key,Nil);
+       Log(Format('key %d',[Ord(Key)]));
+      end;
     end;
    case Key of
     'j':

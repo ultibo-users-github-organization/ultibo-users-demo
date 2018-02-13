@@ -9,7 +9,9 @@ uses
  FunctionCecDemo,
  FunctionDiagnosticsConsole,
  FunctionSimpleAudio,
- uUsersDemo;
+ FunctionPfd,
+ FunctionClock,
+ Multifunction;
 
 procedure RestoreDefaultBootConfig;
 begin
