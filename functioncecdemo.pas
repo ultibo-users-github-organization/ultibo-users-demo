@@ -2,7 +2,6 @@ unit FunctionCecDemo;
 {$mode objfpc}{$H+}
 
 interface
-procedure Main;
 
 implementation
 uses
@@ -151,7 +150,7 @@ begin
  BeginThread(@HdmiInputWatchingThread,nil,HdmiInputWatchingThreadHandle,THREAD_STACK_DEFAULT_SIZE)
 end;
 
-procedure Main;
+function Main:Integer;
 var
  CecEvent:TInputEvent;
  KeyPressed:Boolean;
@@ -166,6 +165,7 @@ begin
  Show('CecDemo');
  Show('-------');
  Show('r key, blue (d) remote controller button - restart system');
+ Show('g key, stop remote controller button - leave current function and move to guide function');
  Show('j key, channel up remote controller button - leave current function and move to next');
  Show('k key, channel down remote controller button - leave current function and move to previous');
  Show('');
@@ -184,6 +184,8 @@ begin
    case CecEvent.Kind of
     KindInputEventCecButtonPressed:
      case CecEvent.ButtonPressed of
+      CEC_User_Control_Stop:
+       Key:='g';
       CEC_User_Control_ChannelUp:
        Key:='j';
       CEC_User_Control_ChannelDown:
@@ -199,12 +201,31 @@ begin
       ConsoleGetKey(Key,Nil);
     end;
    case Key of
+    'g':
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestGuideFunction;
+     end;
+    's':
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestSameFunction;
+     end;
     'j':
-     UpdateFunctionNumber(+1);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestNextFunctionInOrder;
+     end;
     'k':
-     UpdateFunctionNumber(-1);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestPreviousFunctionInOrder;
+     end;
     'r':
-     SystemRestart(0);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestSystemRestart;
+     end;
    end;
    Sleep(10);
   end;

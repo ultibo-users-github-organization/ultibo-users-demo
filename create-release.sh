@@ -10,6 +10,7 @@ mkdir -p release
 rm -rf release/*
 
 ./build.sh
+cp -a test.h264 release/
 cp -a kernel7.img release/ultibo-users-demo-kernel7.img
 cp -a ultibo-users-demo-config.txt ultibo-users-demo-cmdline.txt release/
 cp -a release/ultibo-users-demo-config.txt release/config.txt
@@ -18,7 +19,7 @@ echo >> release/release-message.md
 cat release-message.md >> release/release-message.md
 cp -a firmware/boot/bootcode.bin firmware/boot/start.elf firmware/boot/fixup.dat release/
 cd release
-zip $ZIPFILE *
+zip $ZIPFILE * test.h264
 cd ..
 
 hub release create -d -p -F release/release-message.md -a release/$ZIPFILE $VERSION

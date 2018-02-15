@@ -1,94 +1,47 @@
-unit FunctionSimpleAudio;
-
+unit FunctionGuide;
 {$mode objfpc}{$H+}
 
 interface
 
 implementation
 uses
-  RaspberryPi2,
-  GlobalConfig,
-  GlobalConst,
-  GlobalTypes,
-  Platform,
-  Threads,
-  SysUtils,
-  Classes,
-  Ultibo,framebuffer,console,simpleaudio,Multifunction,VC4CEC
-  { Add additional units here };
-
-var freq2,pan2:double;           // These have to be global
-    MainWindow:TWindowHandle;  // To writeln something :)
-
-procedure beep(freq,pan:double);
-
-begin
- freq2:=2*pi*(freq*20000)/44100;
- pan2:=(pan+1)/2;
-end;
-
-
-procedure audiocallback(userdata: Pointer; stream: PUInt8; len:Integer);
-
-// this is our main audio engine
-
-const phase:double=0.0;                 // Current phase. Has to be static variable
-
-var i:integer;
-    buffer:PSmallInt;
-
-begin
-buffer:=PSmallInt(stream);
-for i:=0 to ((len div 4)-1) do          // we will use 16-bit signed samples, 2 chn = 4 bytes per sample
- begin
-  buffer[2*i]:=round(pan2*32000*sin(phase));
-  buffer[2*i+1]:=round((1-pan2)*32000*sin(phase));
-  phase:=phase+freq2;
-  if phase>2*pi then phase-=2*pi;
- end;
-end;
-
-procedure InitializeAudio;
-begin
- SA_OpenAudio(44100,16,2,384,@audiocallback);    // sample rate, bit, channels, buffer length, callback
-end;
+ GlobalConfig,
+ GlobalConst,
+ GlobalTypes,
+ Platform,
+ Threads,
+ SysUtils,
+ Classes,
+ Ultibo,
+ Logging,
+ Console,
+ Multifunction,
+ VC4CEC;
 
 var
- Pause:Integer;
-
-procedure TogglePause;
-begin
- if Pause = 0 then
-  Pause:=1
- else
-  Pause:=0;
- Log(Format('pauseaudio(%d)',[Pause]));
- pauseaudio(Pause);
-end;
+ FunctionNumber:Integer;
 
 function Main:Integer;
 var
+ I:Integer;
  CecEvent:TInputEvent;
  KeyPressed:Boolean;
  Key:Char;
+ MainWindow:TWindowHandle;
 begin
  MainWindow:=ConsoleWindowCreate(ConsoleDeviceGetDefault,CONSOLE_POSITION_LEFT,True);
  ConsoleWindowSetDefault(ConsoleDeviceGetDefault,MainWindow);
  FunctionIsActive:=True;
 
- Show('Simple Audio');
- Show('------------');
+ Show('Guide to Functions');
+ Show('------------------');
  Show('r key, blue (d) remote controller button - restart system');
  Show('g key, stop remote controller button - leave current function and move to guide function');
  Show('j key, channel up remote controller button - leave current function and move to next');
  Show('k key, channel down remote controller button - leave current function and move to previous');
- Show('space key, pause remote controller button - pause audio output');
  Show('');
-
- writeln('now beep 1000 Hz');
- Pause:=1;
- beep(0.05,0);
- TogglePause;
+ for I:=0 to Length(Functions) - 1 do
+   Show(Format('%d key - %s',[I,Functions[I].Name]));
 
  while FunctionIsActive do
   begin
@@ -105,15 +58,16 @@ begin
        Key:='k';
       CEC_User_Control_F1Blue:
        Key:='r';
-      CEC_User_Control_Pause:
-       Key:=' ';
      end;
    end;
    if Key = Char(0) then
     begin
      KeyPressed:=ConsolePeekKey(Key,Nil);
      if KeyPressed then
-      ConsoleGetKey(Key,Nil);
+      begin
+       ConsoleGetKey(Key,Nil);
+       Log(Format('key %d',[Ord(Key)]));
+      end;
     end;
    case Key of
     'g':
@@ -141,17 +95,22 @@ begin
       FunctionIsActive:=False;
       Result:=RequestSystemRestart;
      end;
-    ' ':
-     TogglePause;
    end;
+   if (Key >= '0') and (Key <= '9') then
+    begin
+     FunctionNumber:=Ord(Key) - Ord('0');
+     if FunctionNumber <= Length(Functions) - 1 then
+      begin
+       FunctionIsActive:=False;
+       Result:=RequestFunctionNumber(FunctionNumber);
+      end;
+    end;
    Sleep(10);
   end;
 
- pauseaudio(1);
  ConsoleWindowDestroy(MainWindow);
 end;
 
 initialization
- RegisterFunction('Simple Audio',@Main);
- InitializeAudio;
+ RegisterFunction('Guide to Functions',@Main);
 end.

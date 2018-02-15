@@ -2,7 +2,6 @@ unit FunctionDiagnosticsConsole;
 {$mode objfpc}{$H+}
 
 interface
-procedure Main;
 
 implementation
 uses
@@ -82,7 +81,7 @@ begin
 //    Log ('Error retrieving EDID. Code ' + res.ToString);   
 end;
 
-procedure Main;
+function Main:Integer;
 var
  I:Integer;
  CecEvent:TInputEvent;
@@ -97,11 +96,14 @@ begin
  Show('Diagnostics Console');
  Show('-------------------');
  Show('r key, blue (d) remote controller button - restart system');
+ Show('g key, stop remote controller button - leave current function and move to guide function');
  Show('j key, channel up remote controller button - leave current function and move to next');
  Show('k key, channel down remote controller button - leave current function and move to previous');
  Show('');
+ Show('Functions');
+ Show('---------');
  for I:=0 to Length(Functions) - 1 do
-  Show(Format('Function %s is available',[Functions[I].Name]));
+  Show(Format('%s',[Functions[I].Name]));
  Show('');
  Show(Format('Board Type %s',[BoardTypeToString(BoardGetType)]));
  GetEdid;
@@ -117,6 +119,8 @@ begin
    case CecEvent.Kind of
     KindInputEventCecButtonPressed:
      case CecEvent.ButtonPressed of
+      CEC_User_Control_Stop:
+       Key:='g';
       CEC_User_Control_ChannelUp:
        Key:='j';
       CEC_User_Control_ChannelDown:
@@ -135,12 +139,31 @@ begin
       end;
     end;
    case Key of
+    'g':
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestGuideFunction;
+     end;
+    's':
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestSameFunction;
+     end;
     'j':
-     UpdateFunctionNumber(+1);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestNextFunctionInOrder;
+     end;
     'k':
-     UpdateFunctionNumber(-1);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestPreviousFunctionInOrder;
+     end;
     'r':
-     SystemRestart(0);
+     begin
+      FunctionIsActive:=False;
+      Result:=RequestSystemRestart;
+     end;
    end;
    Sleep(10);
   end;

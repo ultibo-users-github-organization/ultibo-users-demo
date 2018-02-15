@@ -12,7 +12,7 @@ const
  QueueSize=1024;
 
 type
- TProcedure = procedure;
+ TFunctionReturningInteger = function:Integer;
  KindInputEvent=(KindInputEventNone,KindInputEventCecButtonPressed,KindInputEventCecButtonReleased,KindInputEventKeyboardKey);
  TInputEvent = record
  case Kind:KindInputEvent of
@@ -31,16 +31,25 @@ type
 
  TFunction = record
   Name:String;
-  Main:TProcedure;
+  Main:TFunctionReturningInteger;
  end;
 
-procedure UpdateFunctionNumber(Delta:Integer);
+const
+ RequestNextFunctionInOrder=-1;
+ RequestPreviousFunctionInOrder=-2;
+ RequestSameFunction=-3;
+ RequestGuideFunction=-4;
+ RequestSystemRestart=-5;
+
 function ReadEvent(Queue:PEventQueue):TInputEvent;
 procedure Log(Message:String);
-procedure RegisterFunction(SetName:String;SetMain:TProcedure);
+procedure RegisterFunction(SetName:String;SetMain:TFunctionReturningInteger);
 procedure Show(Text:String);
 procedure StartLogging;
 procedure AddEvent(Queue:PEventQueue;Event:TInputEvent);
+function RequestFunctionNumber(Number:Integer):Integer;
+procedure UpdateFunctionNumber(Delta:Integer);
+procedure SetFunctionNumber(Number:Integer);
 
 var
  Initialized:Boolean=False;
@@ -60,6 +69,17 @@ uses
  Ultibo,
  Logging,
  Keyboard;
+
+function RequestFunctionNumber(Number:Integer):Integer;
+begin
+ Result:=Number;
+end;
+
+procedure SetFunctionNumber(Number:Integer);
+begin
+ FunctionNumber:=Number;
+ FunctionIsActive:=False;
+end;
 
 procedure UpdateFunctionNumber(Delta:Integer);
 begin
@@ -121,7 +141,7 @@ begin
   end;
 end;
 
-procedure RegisterFunction(SetName:String;SetMain:TProcedure);
+procedure RegisterFunction(SetName:String;SetMain:TFunctionReturningInteger);
 begin
  Initialize;
  SetLength(Functions,Length(Functions) + 1);
